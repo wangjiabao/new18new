@@ -12515,7 +12515,7 @@ func (uuc *UserUseCase) Upload(ctx transporthttp.Context) (err error) {
 
 	picName := time.Now().Format("20060102150405") + ".png"
 	// 修改文件名并创建保存图片
-	imageFile, err := os.Create("/www/wwwroot/www.ispayplay.com/images/" + picName)
+	imageFile, err := os.Create("/www/wwwroot/www.fmcace.com/images/" + picName)
 	if err != nil {
 		return
 	}
@@ -12554,7 +12554,7 @@ func (uuc *UserUseCase) UploadTwo(ctx transporthttp.Context) (err error) {
 
 	picName := time.Now().Format("20060102150405") + ".png"
 	// 修改文件名并创建保存图片
-	imageFile, err := os.Create("/www/wwwroot/www.ispayplay.com/images/" + picName)
+	imageFile, err := os.Create("/www/wwwroot/www.fmcace.com/images/" + picName)
 	if err != nil {
 		return
 	}
@@ -12593,7 +12593,7 @@ func (uuc *UserUseCase) UploadThree(ctx transporthttp.Context) (err error) {
 
 	picName := time.Now().Format("20060102150405") + ".png"
 	// 修改文件名并创建保存图片
-	imageFile, err := os.Create("/www/wwwroot/www.ispayplay.com/images/" + picName)
+	imageFile, err := os.Create("/www/wwwroot/www.fmcace.com/images/" + picName)
 	if err != nil {
 		return
 	}
