@@ -1,0 +1,113 @@
+package server
+
+import (
+	"context"
+	v1 "dhb/app/app/api"
+	"dhb/app/app/internal/conf"
+	"dhb/app/app/internal/service"
+	"github.com/go-kratos/kratos/v2/log"
+	"github.com/go-kratos/kratos/v2/middleware/auth/jwt"
+	"github.com/go-kratos/kratos/v2/middleware/recovery"
+	"github.com/go-kratos/kratos/v2/middleware/selector"
+	"github.com/go-kratos/kratos/v2/transport/http"
+	jwt2 "github.com/golang-jwt/jwt/v5"
+	"github.com/gorilla/handlers"
+)
+
+// NewHTTPServer new an HTTP server.
+func NewHTTPServer(c *conf.Server, app *service.AppService, logger log.Logger) *http.Server {
+	var opts = []http.ServerOption{
+		http.Middleware(
+			recovery.Recovery(),
+			selector.Server( // jwt 验证
+				jwt.Server(func(token *jwt2.Token) (interface{}, error) {
+					return []byte("f33933ab18063c2e008115594b901f67"), nil
+				}, jwt.WithSigningMethod(jwt2.SigningMethodHS256)),
+			).Match(NewWhiteListMatcher()).Build(),
+		),
+		http.Filter(handlers.CORS(
+			handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"}),
+			handlers.AllowedMethods([]string{"GET", "POST", "PUT", "HEAD", "OPTIONS"}),
+			handlers.AllowedOrigins([]string{"*"}),
+		)),
+	}
+	if c.Http.Network != "" {
+		opts = append(opts, http.Network(c.Http.Network))
+	}
+	if c.Http.Addr != "" {
+		opts = append(opts, http.Address(c.Http.Addr))
+	}
+	if c.Http.Timeout != nil {
+		opts = append(opts, http.Timeout(c.Http.Timeout.AsDuration()))
+	}
+	srv := http.NewServer(opts...)
+	v1.RegisterAppHTTPServer(srv, app)
+
+	//路由注册
+	route := srv.Route("/api/admin_dhb")
+	//图片上传
+	route.POST("/upload", app.Upload)
+	route.POST("/upload_two", app.UploadTwo)
+	route.POST("/upload_three", app.UploadThree)
+
+	route.GET("/download_data_two", app.DownloadDataTwo)
+	route.GET("/download_data_three", app.DownloadDataThree)
+	return srv
+}
+
+// NewWhiteListMatcher 设置白名单，不需要 token 验证的接口
+func NewWhiteListMatcher() selector.MatchFunc {
+	whiteList := make(map[string]struct{})
+	whiteList["/api.App/AdminLogin"] = struct{}{}
+	whiteList["/api.App/Deposit"] = struct{}{}
+	whiteList["/api.App/DepositOnly"] = struct{}{}
+	whiteList["/api.App/TestMoney"] = struct{}{}
+	whiteList["/api.App/DepositWithdraw"] = struct{}{}
+	whiteList["/api.App/DepositBiw"] = struct{}{}
+	whiteList["/api.App/DepositWithdrawBiw"] = struct{}{}
+	whiteList["/api.App/Deposit5"] = struct{}{}
+	whiteList["/api.App/VipCheck"] = struct{}{}
+	whiteList["/api.App/AdminAddMoney"] = struct{}{}
+	whiteList["/api.App/AdminDailyReward"] = struct{}{}
+	whiteList["/api.App/AdminAddMoneyTwo"] = struct{}{}
+	whiteList["/api.App/AdminSetIspay"] = struct{}{}
+	whiteList["/api.App/Deposit3"] = struct{}{}
+	whiteList["/api.App/Deposit4"] = struct{}{}
+	whiteList["/api.App/AdminTrade"] = struct{}{}
+	whiteList["/api.App/AdminDailyLocationRewardNew"] = struct{}{}
+	whiteList["/api.App/AdminDailyLocationReward"] = struct{}{}
+	whiteList["/api.App/AdminDailyAreaReward"] = struct{}{}
+	whiteList["/api.App/AdminDailyRewardFour"] = struct{}{}
+	whiteList["/api.App/AdminConfigUpdateListen"] = struct{}{}
+	whiteList["/api.App/Deposit2"] = struct{}{}
+	//whiteList["/api.App/AdminLocationList"] = struct{}{}
+	//whiteList["/api.App/AdminRewardList"] = struct{}{}
+	//whiteList["/api.App/AdminUserList"] = struct{}{}
+	//whiteList["/api.App/AdminWithdrawList"] = struct{}{}
+	whiteList["/api.App/AdminWithdraw"] = struct{}{}
+	whiteList["/api.App/AdminWithdrawEth"] = struct{}{}
+	whiteList["/api.App/AdminWithdrawBiw"] = struct{}{}
+	whiteList["/api.App/AdminFee"] = struct{}{}
+	whiteList["/api.App/AdminDailyFee"] = struct{}{}
+	whiteList["/api.App/CheckAndInsertRecommendArea"] = struct{}{}
+	whiteList["/api.App/AdminDailyRecommendReward"] = struct{}{}
+	whiteList["/api.App/CheckAndInsertLocationsRecommendUser"] = struct{}{}
+	whiteList["/api.App/CheckAdminUserArea"] = struct{}{}
+	whiteList["/api.App/AdminDailyLocationRewardThree"] = struct{}{}
+	whiteList["/api.App/AdminDailyLocationReward"] = struct{}{}
+	whiteList["/api.App/AdminDailyBalanceReward"] = struct{}{}
+	whiteList["/api.App/LockSystem"] = struct{}{}
+	whiteList["/api.App/AdminMyTotalAmount"] = struct{}{}
+	whiteList["/api.App/DownloadData"] = struct{}{}
+	//whiteList["/api.App/AdminAll"] = struct{}{}
+	//whiteList["/api.App/AdminConfigUpdate"] = struct{}{}
+	//whiteList["/api.App/AdminConfig"] = struct{}{}
+	//whiteList["/api.App/AdminUserRecommend"] = struct{}{}
+	//whiteList["/api.App/AdminMonthRecommend"] = struct{}{}
+	return func(ctx context.Context, operation string) bool {
+		if _, ok := whiteList[operation]; ok {
+			return false
+		}
+		return true
+	}
+}
