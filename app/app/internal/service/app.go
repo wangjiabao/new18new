@@ -245,7 +245,7 @@ func (a *AppService) DepositOnly(ctx context.Context, req *v1.DepositRequest) (*
 
 		// 0x0299e92df88c034F6425e78b6f6A367e84160B45 test
 		// 0x5d4bAA2A7a73dEF7685d036AAE993662B0Ef2f8F rel
-		userLength, err = getUserLength("0x6602dC610651b30F5a481A412b010fc9Ed6F1D9C")
+		userLength, err = getUserLength("0xD70d574564c754E9Ba1Ccd752a21D0fECC126225")
 		if nil != err {
 			fmt.Println(err)
 		}
@@ -264,7 +264,7 @@ func (a *AppService) DepositOnly(ctx context.Context, req *v1.DepositRequest) (*
 
 		// 0x0299e92df88c034F6425e78b6f6A367e84160B454 test
 		// 0x5d4bAA2A7a73dEF7685d036AAE993662B0Ef2f8F rel
-		depositUsdtResult, err = getUserInfoNew(last, userLength-1, "0x6602dC610651b30F5a481A412b010fc9Ed6F1D9C")
+		depositUsdtResult, err = getUserInfoNew(last, userLength-1, "0xD70d574564c754E9Ba1Ccd752a21D0fECC126225")
 		if nil != err {
 			break
 		}
@@ -295,7 +295,7 @@ func (a *AppService) DepositOnly(ctx context.Context, req *v1.DepositRequest) (*
 					tmpValue int64
 				)
 
-				if 5 <= vUser.Amount {
+				if 10 <= vUser.Amount {
 					tmpValue = vUser.Amount
 				} else {
 					return &v1.DepositReply{}, nil
