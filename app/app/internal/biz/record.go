@@ -635,9 +635,74 @@ func (ruc *RecordUseCase) DepositNewNew(ctx context.Context, userId int64, amoun
 	var (
 		err error
 	)
+
+	if 500 == amount {
+
+	} else if 1000 == amount {
+
+	} else if 3000 == amount {
+
+	} else {
+		fmt.Println("err amount", eth, amount, userId)
+		return nil
+	}
+
+	// 推荐人
+	var (
+		configs []*Config
+		rr1     float64
+		rr2     float64
+		rr3     float64
+	)
+
+	// 配置
+	configs, err = ruc.configRepo.GetConfigByKeys(ctx,
+		"rr1",
+		"rr2",
+		"rr3",
+	)
+	if nil != err || nil == configs {
+		fmt.Println("err config", eth, amount, userId)
+		return nil
+	}
+
+	for _, vConfig := range configs {
+		if "rr1" == vConfig.KeyName {
+			rr1, _ = strconv.ParseFloat(vConfig.Value, 10)
+		}
+		if "rr2" == vConfig.KeyName {
+			rr1, _ = strconv.ParseFloat(vConfig.Value, 10)
+		}
+		if "rr3" == vConfig.KeyName {
+			rr1, _ = strconv.ParseFloat(vConfig.Value, 10)
+		}
+	}
+
+	var (
+		users    []*User
+		user     *User
+		usersMap map[int64]*User
+	)
+	users, err = ruc.userBalanceRepo.GetAllUsersB(ctx)
+	if nil == users {
+		fmt.Println("err users", eth, amount, userId)
+		return nil
+	}
+
+	usersMap = make(map[int64]*User, 0)
+	for _, vUsers := range users {
+		usersMap[vUsers.ID] = vUsers
+	}
+
+	if _, ok := usersMap[eth.UserId]; !ok {
+		fmt.Println("err usersMap", eth, amount, userId)
+		return nil
+	}
+	user = usersMap[eth.UserId]
+
 	// 入金
 	if err = ruc.tx.ExecTx(ctx, func(ctx context.Context) error { // 事务
-		err = ruc.userInfoRepo.UpdateUserNewTwoNewTwoTwo(ctx, userId, amount)
+		err = ruc.userBalanceRepo.UpdateNewBuy(ctx, user.ID, amount, float64(amount), 0, "", "", "", 0)
 		if nil != err {
 			return err
 		}
@@ -663,6 +728,86 @@ func (ruc *RecordUseCase) DepositNewNew(ctx context.Context, userId int64, amoun
 	}); nil != err {
 		fmt.Println(err, "错误投资3", userId, amount)
 		return err
+	}
+
+	// 推荐人
+	var (
+		userRecommend       *UserRecommend
+		tmpRecommendUserIds []string
+	)
+	userRecommend, err = ruc.userRecommendRepo.GetUserRecommendByUserId(ctx, user.ID)
+	if nil != err {
+		fmt.Println("err user r", eth, amount, userId)
+		return nil
+	}
+	if "" != userRecommend.RecommendCode {
+		tmpRecommendUserIds = strings.Split(userRecommend.RecommendCode, "D")
+	}
+
+	totalTmp := len(tmpRecommendUserIds) - 1
+	tmpNum := int64(0)
+	for i := totalTmp; i >= 0; i-- {
+		tmpNum++
+		tmpUserId, _ := strconv.ParseInt(tmpRecommendUserIds[i], 10, 64) // 最后一位是直推人
+		if 0 >= tmpUserId {
+			continue
+		}
+
+		if _, ok := usersMap[tmpUserId]; !ok {
+			fmt.Println("buy遍历，信息缺失,user：", err, eth, tmpUserId)
+			continue
+		}
+
+		if 1 == usersMap[tmpUserId].Lock {
+			continue
+		}
+
+		// 增加业绩
+		if err = ruc.tx.ExecTx(ctx, func(ctx context.Context) error { // 事务
+			err = ruc.userInfoRepo.UpdateUserMyTotalAmountAdd(ctx, tmpUserId, float64(amount), 0)
+			if err != nil {
+				return err
+			}
+
+			return nil
+		}); nil != err {
+			fmt.Println("遍历业绩：", err, tmpUserId, eth, user)
+			continue
+		}
+
+		if 1 == user.LockReward {
+			continue
+		}
+
+		// 直推
+		tmpRecommendUser := usersMap[tmpUserId]
+		recommendRate := float64(0)
+		if 1 == tmpNum {
+			recommendRate = rr1
+		} else if 2 == tmpNum {
+			recommendRate = rr2
+		} else if 3 == tmpNum {
+			recommendRate = rr3
+		} else {
+			break
+		}
+
+		if 0.000000001 > recommendRate {
+			continue
+		}
+
+		// 入金
+		if err = ruc.tx.ExecTx(ctx, func(ctx context.Context) error { // 事务
+			err = ruc.userInfoRepo.UpdateUserRewardRecommend2New(ctx, tmpUserId, tmpNum, float64(amount)*recommendRate, user.Address)
+			if err != nil {
+				fmt.Println("错误分红直推：", err)
+				return err
+			}
+
+			return nil
+		}); nil != err {
+			fmt.Println("err reward recommend", err, amount, user, eth, tmpRecommendUser)
+		}
 	}
 
 	return nil

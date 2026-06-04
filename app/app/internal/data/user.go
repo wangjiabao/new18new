@@ -2871,6 +2871,48 @@ func (ub *UserBalanceRepo) RecommendRewardBiw(ctx context.Context, userId int64,
 	return userBalanceRecode.ID, nil
 }
 
+// UpdateUserNewNewNew .
+func (ui *UserInfoRepo) UpdateNewBuy(ctx context.Context, userId int64, amount uint64, amountRel float64, amountRelIspay float64, one, two, three string, four int64) error {
+	res := ui.data.DB(ctx).Table("user").Where("id=?", userId).
+		Updates(map[string]interface{}{
+			"amount": gorm.Expr("amount + ?", amount),
+		})
+	if res.Error != nil || 1 != res.RowsAffected {
+		return errors.New(500, "UPDATE_USER_ERROR", "用户信息修改失败")
+	}
+
+	var buyRecord BuyRecord
+	buyRecord.UserId = userId
+	buyRecord.Amount = float64(amount)
+	buyRecord.AmountGet = 0
+	buyRecord.Status = 1
+	buyRecord.LastUpdated = time.Now().UTC().Unix()
+	buyRecord.One = one
+	buyRecord.Two = two
+	buyRecord.Three = three
+	buyRecord.Four = four
+
+	res = ui.data.DB(ctx).Table("buy_record").Create(&buyRecord)
+	if res.Error != nil || 1 != res.RowsAffected {
+		return errors.New(500, "CREATE_LOCATION_ERROR", "占位信息创建失败")
+	}
+
+	var (
+		reward Reward
+	)
+
+	reward.UserId = userId
+	reward.AmountNew = amountRel
+	reward.Type = "USDT"  // 本次分红的行为类型
+	reward.Reason = "buy" // 给我分红的理由
+	res = ui.data.DB(ctx).Table("reward").Create(&reward)
+	if res.Error != nil || 1 != res.RowsAffected {
+		return errors.New(500, "CREATE_LOCATION_ERROR", "占位信息创建失败")
+	}
+
+	return nil
+}
+
 // UpdateUserNewTwoNewTwoTwo .
 func (ui *UserInfoRepo) UpdateUserNewTwoNewTwoTwo(ctx context.Context, userId int64, amount uint64) error {
 	res := ui.data.DB(ctx).Table("user_balance").
@@ -2998,6 +3040,37 @@ func (ui *UserInfoRepo) UpdateUserNewTwoNewTwo(ctx context.Context, userId int64
 	err = ui.data.DB(ctx).Table("reward").Create(&rewardTwo).Error
 	if err != nil {
 		return errors.New(500, "CREATE_LOCATION_ERROR", "占位信息创建失败")
+	}
+
+	return nil
+}
+
+// UpdateUserRewardRecommend2New .
+func (ui *UserInfoRepo) UpdateUserRewardRecommend2New(ctx context.Context, userId, i int64, usdt float64, address string) error {
+	var err error
+
+	if 0 < usdt {
+		res := ui.data.DB(ctx).Table("user_balance").
+			Where("user_id=?", userId).
+			Updates(map[string]interface{}{
+				"balance_usdt_float":    gorm.Expr("balance_usdt_float + ?", usdt),
+				"recommend_total_float": gorm.Expr("recommend_total_float + ?", usdt),
+			})
+		if res.Error != nil || 1 != res.RowsAffected {
+			return errors.New(500, "UPDATE_USER_ERROR", "用户信息修改失败")
+		}
+
+		var reward Reward
+		reward.UserId = userId
+		reward.AmountNew = usdt
+		reward.AmountNewTwo = 0
+		reward.Address = address
+		reward.TypeRecordId = i
+		reward.Reason = "recommend" // 直推
+		res = ui.data.DB(ctx).Table("reward").Create(&reward)
+		if res.Error != nil || 1 != res.RowsAffected {
+			return err
+		}
 	}
 
 	return nil
