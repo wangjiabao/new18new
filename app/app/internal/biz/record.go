@@ -702,7 +702,7 @@ func (ruc *RecordUseCase) DepositNewNew(ctx context.Context, userId int64, amoun
 
 	// 入金
 	if err = ruc.tx.ExecTx(ctx, func(ctx context.Context) error { // 事务
-		err = ruc.userBalanceRepo.UpdateNewBuy(ctx, user.ID, amount, float64(amount), 0, "", "", "", 0)
+		err = ruc.userInfoRepo.UpdateNewBuy(ctx, user.ID, amount, float64(amount), 0, "", "", "", 0)
 		if nil != err {
 			return err
 		}

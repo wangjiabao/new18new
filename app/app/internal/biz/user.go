@@ -441,7 +441,6 @@ type UserBalanceRepo interface {
 	WithdrawNewRewardLevelRecommend(ctx context.Context, userId int64, amount int64, amountB int64, locationId int64, tmpRecommendUserIdsInt []int64) (int64, error)
 	UpdateLocationNewMax(ctx context.Context, userId int64, amount int64) (int64, error)
 	GetAllUsersB(ctx context.Context) ([]*User, error)
-	UpdateNewBuy(ctx context.Context, userId int64, amount uint64, amountRel float64, amountRelIspay float64, one, two, three string, four int64) error
 }
 
 type UserRecommendRepo interface {
@@ -525,6 +524,7 @@ type UserInfoRepo interface {
 	UpdateUserRewardAllNew(ctx context.Context, id, userId int64, usdt, raw, usdtOrigin float64, amountOrigin float64, stop bool) error
 	UpdateUserNewNewNewFour(ctx context.Context, userId int64, amount uint64, amountIspay, amountIspayPerDay float64, one, two, three string) error
 	UpdateUserRewardRecommend2New(ctx context.Context, userId, i int64, usdt float64, address string) error
+	UpdateNewBuy(ctx context.Context, userId int64, amount uint64, amountRel float64, amountRelIspay float64, one, two, three string, four int64) error
 }
 
 type UserRepo interface {
