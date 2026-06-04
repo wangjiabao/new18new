@@ -3078,44 +3078,10 @@ func (ui *UserInfoRepo) UpdateUserRewardRecommend2New(ctx context.Context, userI
 
 // UpdateUserMyTotalAmountAdd .
 func (ui *UserInfoRepo) UpdateUserMyTotalAmountAdd(ctx context.Context, userId int64, amountUsdt, myTotal float64) error {
-
-	if 0 < myTotal {
-		res := ui.data.DB(ctx).Table("user").Where("id=?", userId).
-			Updates(map[string]interface{}{
-				"my_total_amount": gorm.Expr("my_total_amount + ?", amountUsdt),
-				"last":            gorm.Expr("last + ?", 1),
-			})
-		if res.Error != nil {
-			return errors.New(500, "UPDATE_USER_ERROR", "用户信息修改失败")
-		}
-
-		res = ui.data.DB(ctx).Table("user_balance").
-			Where("user_id=?", userId).
-			Updates(map[string]interface{}{"balance_raw_float_new": gorm.Expr("balance_raw_float_new + ?", myTotal)})
-		if res.Error != nil {
-			return errors.New(500, "UPDATE_USER_ERROR", "one信息修改失败")
-		}
-
-		var (
-			rewardTwo Reward
-		)
-
-		rewardTwo.UserId = userId
-		rewardTwo.AmountNew = myTotal
-		rewardTwo.AmountNewTwo = myTotal
-		rewardTwo.Type = "ISPAY" // 本次分红的行为类型
-		rewardTwo.TypeRecordId = int64(myTotal)
-		rewardTwo.Reason = "send" // 给我分红的理由
-		err := ui.data.DB(ctx).Table("reward").Create(&rewardTwo).Error
-		if err != nil {
-			return errors.New(500, "CREATE_LOCATION_ERROR", "占位信息创建失败")
-		}
-	} else {
-		res := ui.data.DB(ctx).Table("user").Where("id=?", userId).
-			Updates(map[string]interface{}{"my_total_amount": gorm.Expr("my_total_amount + ?", amountUsdt)})
-		if res.Error != nil {
-			return errors.New(500, "UPDATE_USER_ERROR", "用户信息修改失败")
-		}
+	res := ui.data.DB(ctx).Table("user").Where("id=?", userId).
+		Updates(map[string]interface{}{"my_total_amount": gorm.Expr("my_total_amount + ?", amountUsdt)})
+	if res.Error != nil {
+		return errors.New(500, "UPDATE_USER_ERROR", "用户信息修改失败")
 	}
 
 	return nil

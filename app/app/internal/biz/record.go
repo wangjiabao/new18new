@@ -671,10 +671,10 @@ func (ruc *RecordUseCase) DepositNewNew(ctx context.Context, userId int64, amoun
 			rr1, _ = strconv.ParseFloat(vConfig.Value, 10)
 		}
 		if "rr2" == vConfig.KeyName {
-			rr1, _ = strconv.ParseFloat(vConfig.Value, 10)
+			rr2, _ = strconv.ParseFloat(vConfig.Value, 10)
 		}
 		if "rr3" == vConfig.KeyName {
-			rr1, _ = strconv.ParseFloat(vConfig.Value, 10)
+			rr3, _ = strconv.ParseFloat(vConfig.Value, 10)
 		}
 	}
 
